@@ -1,0 +1,706 @@
+[
+  {
+    "id": "1",
+    "name": "Alabama",
+    "regions": [
+      {
+        "name": "All Alaska Car Shows",
+        "url": "/alaska-car-events/events/category/alaska-car-shows/"
+      },
+      {
+        "name": "All Car Shows",
+        "url": "/alaska-car-events/events/category/alaska-car-shows/"
+      }
+    ]
+  },
+  {
+    "id": "2",
+    "name": "Alaska",
+    "regions": [
+      {
+        "name": "All Alaska Car Shows",
+        "url": "/alaska-car-events/events/category/alaska-car-shows/"
+      },
+      {
+        "name": "All Car Shows",
+        "url": "/alaska-car-events/events/category/alaska-car-shows/"
+      }
+    ]
+  },
+  {
+    "id": "3",
+    "name": "Arizona",
+    "regions": [
+      {
+        "name": "All Arizona Car Shows",
+        "url": "/arizona-car-events/events/category/arizona-car-shows/"
+      },
+      {
+        "name": "All Car Shows",
+        "url": "/arizona-car-events/events/category/arizona-car-shows/"
+      }
+    ]
+  },
+  {
+    "id": "4",
+    "name": "Arkansas",
+    "regions": [
+      {
+        "name": "All Car Shows",
+        "url": "/arkansas-car-events/events/category/arkansas-car-shows/"
+      }
+    ]
+  },
+  {
+    "id": "5",
+    "name": "California",
+    "regions": [
+      {
+        "name": "All California Car Shows",
+        "url": "/california-car-events/events/category/california-car-shows/"
+      },
+      {
+        "name": "All Car Shows",
+        "url": "/california-car-events/events/category/california-car-shows/"
+      }
+    ]
+  },
+  {
+    "id": "6",
+    "name": "Colorado",
+    "regions": [
+      {
+        "name": "All Colorado Car Shows",
+        "url": "/colorado-car-events/events/category/colorado-car-shows/"
+      },
+      {
+        "name": "All Car Shows",
+        "url": "/colorado-car-events/events/category/colorado-car-shows/"
+      }
+    ]
+  },
+  {
+    "id": "7",
+    "name": "Connecticut",
+    "regions": [
+      {
+        "name": "All Connecticut Car Shows",
+        "url": "/connecticut-car-events/events/category/connecticut-car-shows/"
+      },
+      {
+        "name": "All Car Shows",
+        "url": "/connecticut-car-events/events/category/connecticut-car-shows/"
+      }
+    ]
+  },
+  {
+    "id": "8",
+    "name": "Delaware",
+    "regions": [
+      {
+        "name": "All Delaware Car Shows",
+        "url": "/delaware-car-events/events/category/delaware-car-shows/"
+      },
+      {
+        "name": "All Car Shows",
+        "url": "/delaware-car-events/events/category/delaware-car-shows/"
+      }
+    ]
+  },
+  {
+    "id": "9",
+    "name": "Florida",
+    "regions": [
+      {
+        "name": "All Florida Car Shows",
+        "url": "/florida-car-events/events/category/florida-car-shows/"
+      },
+      {
+        "name": "All Car Shows",
+        "url": "/florida-car-events/events/category/florida-car-shows/"
+      }
+    ]
+  },
+  {
+    "id": "10",
+    "name": "Georgia",
+    "regions": [
+      {
+        "name": "All Georgia Car Shows",
+        "url": "/georgia-car-events/events/category/georgia-car-shows/"
+      },
+      {
+        "name": "Georgia Ridge & Valley Region Car Shows",
+        "url": "/georgia-car-events/events/category/georgia-car-shows/georgia-ridge-valley-region-car-shows/"
+      },
+      {
+        "name": "All Car Shows",
+        "url": "/georgia-car-events/events/category/georgia-car-shows/"
+      }
+    ]
+  },
+  {
+    "id": "11",
+    "name": "Hawaii",
+    "regions": [
+      {
+        "name": "All Hawaii Car Shows",
+        "url": "/hawaii-car-events/events/category/hawaii-car-shows/"
+      },
+      {
+        "name": "All Car Shows",
+        "url": "/hawaii-car-events/events/category/hawaii-car-shows/"
+      }
+    ]
+  },
+  {
+    "id": "12",
+    "name": "Idaho",
+    "regions": [
+      {
+        "name": "All Idaho Car Shows",
+        "url": "/idaho-car-events/events/category/idaho-car-shows/"
+      },
+      {
+        "name": "All Car Shows",
+        "url": "/idaho-car-events/events/category/idaho-car-shows/"
+      }
+    ]
+  },
+  {
+    "id": "13",
+    "name": "Illinois",
+    "regions": [
+      {
+        "name": "All Illinois Car Shows",
+        "url": "/illinois-car-events/events/category/illinois-car-shows/"
+      },
+      {
+        "name": "All Car Shows",
+        "url": "/illinois-car-events/events/category/illinois-car-shows/"
+      }
+    ]
+  },
+  {
+    "id": "14",
+    "name": "Indiana",
+    "regions": [
+      {
+        "name": "All Indiana Car Shows",
+        "url": "/indiana-car-events/events/category/indiana-car-shows/"
+      },
+      {
+        "name": "All Car Shows",
+        "url": "/indiana-car-events/events/category/indiana-car-shows/"
+      }
+    ]
+  },
+  {
+    "id": "15",
+    "name": "Iowa",
+    "regions": [
+      {
+        "name": "All Iowa Car Shows",
+        "url": "/iowa-car-events/events/category/iowa-car-shows/"
+      },
+      {
+        "name": "All Car Shows",
+        "url": "/iowa-car-events/events/category/iowa-car-shows/"
+      }
+    ]
+  },
+  {
+    "id": "16",
+    "name": "Kansas",
+    "regions": [
+      {
+        "name": "All Kansas Car Shows",
+        "url": "/kansas-car-events/events/category/kansas-car-shows/"
+      },
+      {
+        "name": "All Car Shows",
+        "url": "/kansas-car-events/events/category/kansas-car-shows/"
+      }
+    ]
+  },
+  {
+    "id": "17",
+    "name": "Kentucky",
+    "regions": [
+      {
+        "name": "All Kentucky Car Shows",
+        "url": "/kentucky-car-events/events/category/kentucky-car-shows/"
+      },
+      {
+        "name": "All Car Shows",
+        "url": "/kentucky-car-events/events/category/kentucky-car-shows/"
+      }
+    ]
+  },
+  {
+    "id": "18",
+    "name": "Louisiana",
+    "regions": [
+      {
+        "name": "All Louisiana Car Shows",
+        "url": "/louisiana-car-events/events/category/louisiana-car-shows/"
+      },
+      {
+        "name": "All Car Shows",
+        "url": "/louisiana-car-events/events/category/louisiana-car-shows/"
+      }
+    ]
+  },
+  {
+    "id": "19",
+    "name": "Maine",
+    "regions": [
+      {
+        "name": "All Maine Car Shows",
+        "url": "/maine-car-events/events/category/maine-car-shows/"
+      },
+      {
+        "name": "All Car Shows",
+        "url": "/maine-car-events/events/category/maine-car-shows/"
+      }
+    ]
+  },
+  {
+    "id": "20",
+    "name": "Maryland",
+    "regions": [
+      {
+        "name": "All Maryland Car Shows",
+        "url": "/maryland-car-events/events/category/maryland-car-shows/"
+      },
+      {
+        "name": "All Car Shows",
+        "url": "/maryland-car-events/events/category/maryland-car-shows/"
+      }
+    ]
+  },
+  {
+    "id": "21",
+    "name": "Massachusetts",
+    "regions": [
+      {
+        "name": "All Massachusetts Car Shows",
+        "url": "/massachusetts-car-events/events/category/massachusetts-car-shows/"
+      },
+      {
+        "name": "All Car Shows",
+        "url": "/massachusetts-car-events/events/category/massachusetts-car-shows/"
+      }
+    ]
+  },
+  {
+    "id": "22",
+    "name": "Michigan",
+    "regions": [
+      {
+        "name": "All Michigan Car Shows",
+        "url": "/michigan-car-events/events/category/michigan-car-shows/"
+      },
+      {
+        "name": "All Car Shows",
+        "url": "/michigan-car-events/events/category/michigan-car-shows/"
+      }
+    ]
+  },
+  {
+    "id": "23",
+    "name": "Minnesota",
+    "regions": [
+      {
+        "name": "All Minnesota Car Shows",
+        "url": "/minnesota-car-events/events/category/minnesota-car-shows/"
+      },
+      {
+        "name": "All Car Shows",
+        "url": "/minnesota-car-events/events/category/minnesota-car-shows/"
+      }
+    ]
+  },
+  {
+    "id": "24",
+    "name": "Mississippi",
+    "regions": [
+      {
+        "name": "All Mississippi Car Shows",
+        "url": "/mississippi-car-events/events/category/mississippi-car-shows/"
+      },
+      {
+        "name": "All Car Shows",
+        "url": "/mississippi-car-events/events/category/mississippi-car-shows/"
+      }
+    ]
+  },
+  {
+    "id": "25",
+    "name": "Missouri",
+    "regions": [
+      {
+        "name": "All Missouri Car Shows",
+        "url": "/missouri-car-events/events/category/missouri-car-shows/"
+      },
+      {
+        "name": "All Car Shows",
+        "url": "/missouri-car-events/events/category/missouri-car-shows/"
+      }
+    ]
+  },
+  {
+    "id": "26",
+    "name": "Montana",
+    "regions": [
+      {
+        "name": "All Montana Car Shows",
+        "url": "/montana-car-events/events/category/montana-car-shows/"
+      },
+      {
+        "name": "All Car Shows",
+        "url": "/montana-car-events/events/category/montana-car-shows/"
+      }
+    ]
+  },
+  {
+    "id": "27",
+    "name": "Nebraska",
+    "regions": [
+      {
+        "name": "All Nebraska Car Shows",
+        "url": "/nebraska-car-events/events/category/nebraska-car-shows/"
+      },
+      {
+        "name": "All Car Shows",
+        "url": "/nebraska-car-events/events/category/nebraska-car-shows/"
+      }
+    ]
+  },
+  {
+    "id": "28",
+    "name": "Nevada",
+    "regions": [
+      {
+        "name": "All Nevada Car Shows",
+        "url": "/nevada-car-events/events/category/nevada-car-shows/"
+      },
+      {
+        "name": "All Car Shows",
+        "url": "/nevada-car-events/events/category/nevada-car-shows/"
+      }
+    ]
+  },
+  {
+    "id": "29",
+    "name": "New Hampshire",
+    "regions": [
+      {
+        "name": "All New Hampshire Car Shows",
+        "url": "/new-hampshire-car-events/events/category/new-hampshire-car-shows/"
+      },
+      {
+        "name": "All Car Shows",
+        "url": "/new-hampshire-car-events/events/category/new-hampshire-car-shows/"
+      }
+    ]
+  },
+  {
+    "id": "30",
+    "name": "New Jersey",
+    "regions": [
+      {
+        "name": "All New Jersey Car Shows",
+        "url": "/new-jersey-car-events/events/category/new-jersey-car-shows/"
+      },
+      {
+        "name": "All Car Shows",
+        "url": "/new-jersey-car-events/events/category/new-jersey-car-shows/"
+      }
+    ]
+  },
+  {
+    "id": "31",
+    "name": "New Mexico",
+    "regions": [
+      {
+        "name": "All New Mexico Car Shows",
+        "url": "/new-mexico-car-events/events/category/new-mexico-car-shows/"
+      },
+      {
+        "name": "All Car Shows",
+        "url": "/new-mexico-car-events/events/category/new-mexico-car-shows/"
+      }
+    ]
+  },
+  {
+    "id": "32",
+    "name": "New York",
+    "regions": [
+      {
+        "name": "All New York Car Shows",
+        "url": "/new-york-car-events/events/category/new-york-car-shows/"
+      },
+      {
+        "name": "NY Hudson Valley Car Shows",
+        "url": "/new-york-car-events/events/category/new-york-car-shows/ny-hudson-valley-car-shows/"
+      },
+      {
+        "name": "All Car Shows",
+        "url": "/new-york-car-events/events/category/new-york-car-shows/"
+      }
+    ]
+  },
+  {
+    "id": "33",
+    "name": "North Carolina",
+    "regions": [
+      {
+        "name": "All North Carolina Car Shows",
+        "url": "/north-carolina-car-events/events/category/north-carolina-car-shows/"
+      },
+      {
+        "name": "All Car Shows",
+        "url": "/north-carolina-car-events/events/category/north-carolina-car-shows/"
+      }
+    ]
+  },
+  {
+    "id": "34",
+    "name": "North Dakota",
+    "regions": [
+      {
+        "name": "All North Dakota Car Shows",
+        "url": "/north-dakota-car-events/events/category/north-dakota-car-shows/"
+      },
+      {
+        "name": "All Car Shows",
+        "url": "/north-dakota-car-events/events/category/north-dakota-car-shows/"
+      }
+    ]
+  },
+  {
+    "id": "35",
+    "name": "Ohio",
+    "regions": [
+      {
+        "name": "All Ohio Car Shows",
+        "url": "/ohio-car-events/events/category/ohio-car-shows/"
+      },
+      {
+        "name": "All Car Shows",
+        "url": "/ohio-car-events/events/category/ohio-car-shows/"
+      }
+    ]
+  },
+  {
+    "id": "36",
+    "name": "Oklahoma",
+    "regions": [
+      {
+        "name": "All Oklahoma Car Shows",
+        "url": "/oklahoma-car-events/events/category/oklahoma-car-shows/"
+      },
+      {
+        "name": "All Car Shows",
+        "url": "/oklahoma-car-events/events/category/oklahoma-car-shows/"
+      }
+    ]
+  },
+  {
+    "id": "37",
+    "name": "Oregon",
+    "regions": [
+      {
+        "name": "All Oregon Car Shows",
+        "url": "/oregon-car-events/events/category/oregon-car-shows/"
+      },
+      {
+        "name": "All Car Shows",
+        "url": "/oregon-car-events/events/category/oregon-car-shows/"
+      }
+    ]
+  },
+  {
+    "id": "38",
+    "name": "Pennsylvania",
+    "regions": [
+      {
+        "name": "All Pennsylvania Car Shows",
+        "url": "/pennsylvania-car-events/events/category/pennsylvania-car-shows/"
+      },
+      {
+        "name": "All Car Shows",
+        "url": "/pennsylvania-car-events/events/category/pennsylvania-car-shows/"
+      }
+    ]
+  },
+  {
+    "id": "39",
+    "name": "Rhode Island",
+    "regions": [
+      {
+        "name": "All Rhode Island Car Shows",
+        "url": "/rhode-island-car-events/events/category/rhode-island-car-shows/"
+      },
+      {
+        "name": "All Car Shows",
+        "url": "/rhode-island-car-events/events/category/rhode-island-car-shows/"
+      }
+    ]
+  },
+  {
+    "id": "40",
+    "name": "South Carolina",
+    "regions": [
+      {
+        "name": "All South Carolina Car Shows",
+        "url": "/south-carolina-car-events/events/category/south-carolina-car-shows/"
+      },
+      {
+        "name": "All Car Shows",
+        "url": "/south-carolina-car-events/events/category/south-carolina-car-shows/"
+      }
+    ]
+  },
+  {
+    "id": "41",
+    "name": "South Dakota",
+    "regions": [
+      {
+        "name": "All South Dakota Car Shows",
+        "url": "/south-dakota-car-events/events/category/south-dakota-car-shows/"
+      },
+      {
+        "name": "All Car Shows",
+        "url": "/south-dakota-car-events/events/category/south-dakota-car-shows/"
+      }
+    ]
+  },
+  {
+    "id": "42",
+    "name": "Tennessee",
+    "regions": [
+      {
+        "name": "All Tennessee Car Shows",
+        "url": "/tennessee-car-events/events/category/tennessee-car-shows/"
+      },
+      {
+        "name": "All Car Shows",
+        "url": "/tennessee-car-events/events/category/tennessee-car-shows/"
+      }
+    ]
+  },
+  {
+    "id": "43",
+    "name": "Texas",
+    "regions": [
+      {
+        "name": "All Texas Car Shows",
+        "url": "/texas-car-events/events/category/texas-car-shows/"
+      },
+      {
+        "name": "All Car Shows",
+        "url": "/texas-car-shows/events/category/texas-car-shows/"
+      }
+    ]
+  },
+  {
+    "id": "44",
+    "name": "Utah",
+    "regions": [
+      {
+        "name": "All Utah Car Shows",
+        "url": "/utah-car-events/events/category/utah-car-shows/"
+      },
+      {
+        "name": "All Car Shows",
+        "url": "/utah-car-events/events/category/utah-car-shows/"
+      }
+    ]
+  },
+  {
+    "id": "45",
+    "name": "Vermont",
+    "regions": [
+      {
+        "name": "All Vermont Car Shows",
+        "url": "/vermont-car-events/events/category/vermont-car-shows/"
+      },
+      {
+        "name": "All Car Shows",
+        "url": "/vermont-car-events/events/category/vermont-car-shows/"
+      }
+    ]
+  },
+  {
+    "id": "46",
+    "name": "Virginia",
+    "regions": [
+      {
+        "name": "All Virginia Car Shows",
+        "url": "/virginia-car-events/events/category/virginia-car-shows/"
+      },
+      {
+        "name": "All Car Shows",
+        "url": "/virginia-car-events/events/category/virginia-car-shows/"
+      }
+    ]
+  },
+  {
+    "id": "47",
+    "name": "Washington",
+    "regions": [
+      {
+        "name": "All Washington Car Shows",
+        "url": "/washington-car-events/events/category/washington-car-shows/"
+      },
+      {
+        "name": "All Car Shows",
+        "url": "/washington-car-events/events/category/washington-car-shows/"
+      }
+    ]
+  },
+  {
+    "id": "48",
+    "name": "West Virginia",
+    "regions": [
+      {
+        "name": "All West Virginia Car Shows",
+        "url": "/west-virginia-car-events/events/category/west-virginia-car-shows/west-virginia-car-shows/"
+      },
+      {
+        "name": "All Car Shows",
+        "url": "/west-virginia-car-events/events/category/west-virginia-car-shows/"
+      }
+    ]
+  },
+  {
+    "id": "49",
+    "name": "Wisconsin",
+    "regions": [
+      {
+        "name": "All Wisconsin Car Shows",
+        "url": "/wisconsin-car-events/events/category/wisconsin-car-shows/"
+      },
+      {
+        "name": "All Car Shows",
+        "url": "/wisconsin-car-events/events/category/wisconsin-car-shows/"
+      }
+    ]
+  },
+  {
+    "id": "50",
+    "name": "Wyoming",
+    "regions": [
+      {
+        "name": "All Wyoming Car Shows",
+        "url": "/wyoming-car-events/events/category/wyoming-car-shows/"
+      },
+      {
+        "name": "All Car Shows",
+        "url": "/wyoming-car-events/events/category/wyoming-car-shows/"
+      }
+    ]
+  }
+]
