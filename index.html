@@ -1,21 +1,136 @@
 <!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="UTF-8" />
-    <meta
-      http-equiv="Content-Security-Policy"
-      content="default-src 'self'; script-src 'self'"
-    />
-    <meta
-      http-equiv="X-Content-Security-Policy"
-      content="default-src 'self'; script-src 'self'"
-    />
-    <title>Hello from Electron renderer!</title>
-  </head>
-  <body>
-    <h1>Hello from Electron renderer!</h1>
-    <p>👋</p>
-    <p id="info"></p>
-  </body>
-  <script src="./renderer.js"></script>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Car Events Scraper</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .control-panel {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        button {
+            padding: 10px 15px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        #progress-log {
+            border: 1px solid #ddd;
+            height: 400px;
+            overflow-y: auto;
+            padding: 10px;
+            background-color: #f9f9f9;
+        }
+        .log-entry {
+            margin-bottom: 5px;
+            padding: 5px;
+            background-color: #f1f1f1;
+        }
+        .log-entry.error {
+            color: red;
+        }
+        .log-entry.success {
+            color: green;
+        }
+    </style>
+</head>
+<body>
+    <h1>Car Events Scraper</h1>
+    
+    <div class="control-panel">
+        <button id="start-btn">Start Scraping</button>
+        <button id="reset-btn">Reset Scraper</button>
+    </div>
+
+    <div id="progress-log"></div>
+
+    <script>
+        const startBtn = document.getElementById('start-btn');
+        const resetBtn = document.getElementById('reset-btn');
+        const progressLog = document.getElementById('progress-log');
+
+        // Helper function to log messages
+        function logMessage(message, type = 'info') {
+            const entry = document.createElement('div');
+            entry.classList.add('log-entry', type);
+            entry.textContent = message;
+            progressLog.prepend(entry);
+            
+            // Limit log entries
+            if (progressLog.children.length > 500) {
+                progressLog.removeChild(progressLog.lastChild);
+            }
+        }
+
+        // Start scraping
+        startBtn.addEventListener('click', async () => {
+            startBtn.disabled = true;
+            resetBtn.disabled = true;
+            progressLog.innerHTML = ''; // Clear previous logs
+            
+            try {
+                // Register progress listener
+                window.electronAPI.onScrapingProgress((event, message) => {
+                    logMessage(message);
+                });
+
+                // Start scraping
+                const result = await window.electronAPI.startScraping();
+
+                if (result.success) {
+                    logMessage(result.message, 'success');
+                } else {
+                    logMessage(result.message, 'error');
+                }
+            } catch (error) {
+                logMessage(`Unexpected error: ${error.message}`, 'error');
+            } finally {
+                startBtn.disabled = false;
+                resetBtn.disabled = false;
+                
+                // Remove progress listener
+                window.electronAPI.removeScrapingProgressListener();
+            }
+        });
+
+        // Reset scraper
+        resetBtn.addEventListener('click', async () => {
+            startBtn.disabled = true;
+            resetBtn.disabled = true;
+            
+            try {
+                const result = await window.electronAPI.resetScraper();
+
+                if (result.success) {
+                    logMessage(result.message, 'success');
+                    progressLog.innerHTML = ''; // Clear logs
+                } else {
+                    logMessage(result.message, 'error');
+                }
+            } catch (error) {
+                logMessage(`Unexpected error: ${error.message}`, 'error');
+            } finally {
+                startBtn.disabled = false;
+                resetBtn.disabled = false;
+            }
+        });
+    </script>
+</body>
 </html>

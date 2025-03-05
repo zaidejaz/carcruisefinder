@@ -21,7 +21,6 @@ async function simulateHumanClick(page, selector) {
 
   // Simulate human-like clicking
   await page.mouse.down();
-  await page.waitForTimeout(Math.random() * 50 + 50); // Small random delay
   await page.mouse.up();
 }
 
@@ -58,8 +57,6 @@ async function scrapeStatesAndRegions() {
     
     // Initial click on state dropdown to "wake it up"
     await simulateHumanClick(page, '#cat');
-    await page.waitForTimeout(1000);
-
     // Iterate through states and get their regions
     for (const state of states) {
       console.log(`Scraping regions for ${state.name}`);
@@ -74,12 +71,10 @@ async function scrapeStatesAndRegions() {
         select.dispatchEvent(event);
       }, state.id);
 
-      // Wait for potential dynamic loading
-      await page.waitForTimeout(1000);
 
       // Simulate clicking on region dropdown
       await simulateHumanClick(page, '#region-dropdown');
-      await page.waitForTimeout(500);
+
 
       // Wait for region dropdown to populate
       await page.evaluate(() => {
@@ -117,8 +112,6 @@ async function scrapeStatesAndRegions() {
         regions: regions
       });
 
-      // Random delay between states to appear more human-like
-      await page.waitForTimeout(Math.random() * 1000 + 500);
     }
 
     // Save results to JSON file

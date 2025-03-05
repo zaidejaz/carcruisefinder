@@ -1,35 +1,8 @@
-const { app, BrowserWindow } = require('electron/main')
-const path = require('path')
+const { contextBridge, ipcRenderer } = require('electron');
 
-const createWindow = () => {
-  const win = new BrowserWindow({
-    width: 800,
-    height: 600,
-    webPreferences: {
-      nodeIntegration: true,
-      contextIsolation: false,
-      preload: path.join(__dirname, 'preload.js')
-    }
-  })
-
-  win.loadFile('index.html')
-  
-  // Optional: Open DevTools for debugging
-  // win.webContents.openDevTools()
-}
-
-app.whenReady().then(() => {
-  createWindow()
-
-  app.on('activate', () => {
-    if (BrowserWindow.getAllWindows().length === 0) {
-      createWindow()
-    }
-  })
-})
-
-app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') {
-    app.quit()
-  }
-})
+contextBridge.exposeInMainWorld('electronAPI', {
+  startScraping: () => ipcRenderer.invoke('start-scraping'),
+  resetScraper: () => ipcRenderer.invoke('reset-scraper'),
+  onScrapingProgress: (callback) => ipcRenderer.on('scraping-progress', callback),
+  removeScrapingProgressListener: () => ipcRenderer.removeAllListeners('scraping-progress')
+});
