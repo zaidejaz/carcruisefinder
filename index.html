@@ -1,136 +1,930 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <title>Car Events Scraper</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <style>
         body {
-            font-family: Arial, sans-serif;
-            max-width: 800px;
-            margin: 0 auto;
+            background-color: #f4f4f4;
+            font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        .custom-shadow {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+
+        #progress-bar {
+            transition: width 0.5s ease-in-out;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.4);
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 10% auto;
             padding: 20px;
-            line-height: 1.6;
+            border-radius: 8px;
+            width: 80%;
+            max-width: 800px;
+            max-height: 70vh;
+            overflow-y: auto;
         }
-        .control-panel {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-        }
-        button {
-            padding: 10px 15px;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            cursor: pointer;
-            transition: background-color 0.3s;
-        }
-        button:hover {
-            background-color: #45a049;
-        }
-        button:disabled {
-            background-color: #cccccc;
+
+        .btn-disabled {
+            opacity: 0.5;
             cursor: not-allowed;
         }
-        #progress-log {
-            border: 1px solid #ddd;
-            height: 400px;
-            overflow-y: auto;
-            padding: 10px;
-            background-color: #f9f9f9;
-        }
+
         .log-entry {
-            margin-bottom: 5px;
-            padding: 5px;
-            background-color: #f1f1f1;
+            border-left: 4px solid transparent;
+            margin-bottom: 8px;
+            padding: 8px;
+            border-radius: 4px;
         }
-        .log-entry.error {
-            color: red;
+
+        .log-entry.info {
+            border-left-color: #3b82f6;
+            background-color: #eff6ff;
         }
+
         .log-entry.success {
-            color: green;
+            border-left-color: #10b981;
+            background-color: #ecfdf5;
         }
-    </style>
-</head>
-<body>
-    <h1>Car Events Scraper</h1>
-    
-    <div class="control-panel">
-        <button id="start-btn">Start Scraping</button>
-        <button id="reset-btn">Reset Scraper</button>
-    </div>
 
-    <div id="progress-log"></div>
+        .log-entry.error {
+            border-left-color: #ef4444;
+            background-color: #fef2f2;
+        }
 
-    <script>
-        const startBtn = document.getElementById('start-btn');
-        const resetBtn = document.getElementById('reset-btn');
-        const progressLog = document.getElementById('progress-log');
+        .log-entry .timestamp {
+            font-size: 0.75rem;
+            color: #6b7280;
+            margin-right: 8px;
+        }
 
-        // Helper function to log messages
-        function logMessage(message, type = 'info') {
-            const entry = document.createElement('div');
-            entry.classList.add('log-entry', type);
-            entry.textContent = message;
-            progressLog.prepend(entry);
-            
-            // Limit log entries
-            if (progressLog.children.length > 500) {
-                progressLog.removeChild(progressLog.lastChild);
+        /* Pulse animation for active scraping */
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7);
+            }
+
+            70% {
+                box-shadow: 0 0 0 10px rgba(59, 130, 246, 0);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(59, 130, 246, 0);
             }
         }
 
-        // Start scraping
-        startBtn.addEventListener('click', async () => {
-            startBtn.disabled = true;
+        .pulse-animation {
+            animation: pulse 2s infinite;
+        }
+    </style>
+</head>
+
+<body class="font-sans antialiased">
+    <div class="container mx-auto px-4 py-8">
+        <div class="bg-white rounded-lg shadow-lg p-6">
+            <h1 class="text-3xl font-bold text-gray-800 mb-2 text-center">Car Events Scraper</h1>
+            <p class="text-center text-gray-600 mb-6">Scrape and collect car events data from carcruisefinder.com</p>
+
+            <div class="mb-6">
+                <div class="flex justify-between mb-2">
+                    <span class="text-sm font-medium text-gray-600" id="progress-status">Ready to Start</span>
+                    <span id="progress-percentage" class="text-sm font-medium text-gray-600">0%</span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-2.5">
+                    <div id="progress-bar" class="bg-blue-600 h-2.5 rounded-full" style="width: 0%"></div>
+                </div>
+                <div id="progress-detail" class="text-xs text-gray-500 mt-1 text-center"></div>
+            </div>
+
+            <div class="flex flex-wrap gap-4 justify-center">
+                <button id="start-btn"
+                    class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded transition duration-300 ease-in-out transform hover:scale-105">
+                    Start Scraping
+                </button>
+                <button id="resume-btn"
+                    class="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-4 rounded transition duration-300 ease-in-out transform hover:scale-105 hidden">
+                    Resume Scraping
+                </button>
+                <button id="stop-btn"
+                    class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded transition duration-300 ease-in-out transform hover:scale-105 hidden">
+                    Stop Scraping
+                </button>
+                <button id="reset-btn"
+                    class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded transition duration-300 ease-in-out transform hover:scale-105 btn-disabled"
+                    disabled>
+                    Reset Scraper
+                </button>
+                <button id="download-btn"
+                    class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded transition duration-300 ease-in-out transform hover:scale-105 hidden">
+                    Download CSV
+                </button>
+                <button id="view-logs-btn"
+                    class="bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-2 px-4 rounded transition duration-300 ease-in-out transform hover:scale-105">
+                    View Logs
+                </button>
+            </div>
+
+            <div id="status-container" class="mt-6 hidden">
+                <div id="status-message" class="p-3 rounded text-center"></div>
+            </div>
+
+            <!-- Stats Section -->
+            <div id="stats-container" class="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4 hidden">
+                <div class="bg-blue-50 p-4 rounded-lg shadow">
+                    <h3 class="text-sm font-medium text-blue-900">States Processed</h3>
+                    <p id="stats-states" class="text-2xl font-bold text-blue-700">0/0</p>
+                </div>
+                <div class="bg-green-50 p-4 rounded-lg shadow">
+                    <h3 class="text-sm font-medium text-green-900">Events Scraped</h3>
+                    <p id="stats-events" class="text-2xl font-bold text-green-700">0</p>
+                </div>
+                <div class="bg-purple-50 p-4 rounded-lg shadow">
+                    <h3 class="text-sm font-medium text-purple-900">Current State</h3>
+                    <p id="stats-current-state" class="text-xl font-bold text-purple-700">None</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Logs Modal -->
+    <div id="logs-modal" class="modal">
+        <div class="modal-content custom-shadow">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-bold text-gray-800">Scraping Logs</h2>
+                <span id="close-logs" class="text-gray-600 hover:text-gray-800 cursor-pointer text-2xl">&times;</span>
+            </div>
+            <div class="flex justify-between mb-4">
+                <div>
+                    <button id="refresh-logs"
+                        class="bg-blue-500 hover:bg-blue-600 text-white text-sm py-1 px-3 rounded">
+                        Refresh Logs
+                    </button>
+                    <button id="clear-log-display"
+                        class="bg-gray-500 hover:bg-gray-600 text-white text-sm py-1 px-3 rounded ml-2">
+                        Clear Display
+                    </button>
+                </div>
+                <div>
+                    <label class="text-sm text-gray-600 mr-2">
+                        <input type="checkbox" id="auto-refresh-logs" class="mr-1"> Auto-refresh
+                    </label>
+                    <select id="log-filter" class="text-sm border rounded p-1">
+                        <option value="all">All logs</option>
+                        <option value="info">Info only</option>
+                        <option value="success">Success only</option>
+                        <option value="error">Errors only</option>
+                    </select>
+                </div>
+            </div>
+            <div id="logs-container" class="bg-gray-50 p-4 rounded max-h-96 overflow-y-auto"></div>
+        </div>
+    </div>
+
+    <script>
+        // DOM Elements
+        const startBtn = document.getElementById('start-btn');
+        const resumeBtn = document.getElementById('resume-btn');
+        const stopBtn = document.getElementById('stop-btn');
+        const resetBtn = document.getElementById('reset-btn');
+        const downloadBtn = document.getElementById('download-btn');
+        const viewLogsBtn = document.getElementById('view-logs-btn');
+        const progressBar = document.getElementById('progress-bar');
+        const progressPercentage = document.getElementById('progress-percentage');
+        const progressStatus = document.getElementById('progress-status');
+        const progressDetail = document.getElementById('progress-detail');
+        const statusContainer = document.getElementById('status-container');
+        const statusMessage = document.getElementById('status-message');
+        const statsContainer = document.getElementById('stats-container');
+        const statsStates = document.getElementById('stats-states');
+        const statsEvents = document.getElementById('stats-events');
+        const statsCurrentState = document.getElementById('stats-current-state');
+        const logsModal = document.getElementById('logs-modal');
+        const closeLogsBtn = document.getElementById('close-logs');
+        const logsContainer = document.getElementById('logs-container');
+        const refreshLogsBtn = document.getElementById('refresh-logs');
+        const clearLogDisplayBtn = document.getElementById('clear-log-display');
+        const autoRefreshLogsCheckbox = document.getElementById('auto-refresh-logs');
+        const logFilterSelect = document.getElementById('log-filter');
+
+        // State variables
+        let isScraperRunning = false;
+        let hasScrapedData = false;
+        let hasProgress = false;
+        let logsAutoRefreshInterval = null;
+        let currentStateInfo = { state: 'None', index: 0, total: 0 };
+        let eventsScraped = 0;
+
+        function setScraperRunningUI() {
+            // Update button visibility
+            startBtn.classList.add('hidden');
+            resumeBtn.classList.add('hidden');
+            stopBtn.classList.remove('hidden');
+            stopBtn.textContent = 'Stop Scraping'; // Reset the button text
+            stopBtn.disabled = false;
+            stopBtn.classList.remove('btn-disabled');
             resetBtn.disabled = true;
-            progressLog.innerHTML = ''; // Clear previous logs
-            
+            resetBtn.classList.add('btn-disabled');
+            downloadBtn.classList.add('hidden');
+
+            // Update progress indicators
+            progressBar.classList.add('pulse-animation');
+            progressStatus.textContent = 'Scraping in progress...';
+            statsContainer.classList.remove('hidden');
+
+            console.log("UI Updated: Scraper Running");
+        }
+        // Initialize app state
+        async function initializeAppState() {
             try {
-                // Register progress listener
-                window.electronAPI.onScrapingProgress((event, message) => {
-                    logMessage(message);
-                });
+                console.log("Initializing app state...");
+                const state = await window.electronAPI.checkAppState();
+                console.log("App state:", state);
 
-                // Start scraping
-                const result = await window.electronAPI.startScraping();
+                // Update application state
+                isScraperRunning = state.isScraperRunning;
+                hasScrapedData = state.scrapedDataExists;
+                hasProgress = state.hasProgress;
 
-                if (result.success) {
-                    logMessage(result.message, 'success');
+                // Update UI based on app state
+                if (isScraperRunning) {
+                    // Scraper is currently running
+                    console.log("Setting UI: Scraper Running");
+                    setScraperRunningUI();
+                } else if (hasScrapedData && hasProgress) {
+                    // Previous data exists with progress information
+                    console.log("Setting UI: Resume Available");
+                    setResumeAvailableUI();
+                } else if (hasScrapedData) {
+                    // Previous data exists but no progress info
+                    console.log("Setting UI: Data Available");
+                    setDataAvailableUI();
                 } else {
-                    logMessage(result.message, 'error');
+                    // No scraping in progress and no previous data
+                    console.log("Setting UI: Ready to Start");
+                    setReadyToStartUI();
                 }
             } catch (error) {
-                logMessage(`Unexpected error: ${error.message}`, 'error');
+                console.error('Error checking app state:', error);
+                showStatusMessage('Error checking application state', 'error');
+            }
+        }
+
+        // UI State Functions - These should be mutually exclusive
+        function setScraperRunningUI() {
+            // Update button visibility
+            startBtn.classList.add('hidden');
+            resumeBtn.classList.add('hidden');
+            stopBtn.classList.remove('hidden');
+            resetBtn.disabled = true;
+            resetBtn.classList.add('btn-disabled');
+            downloadBtn.classList.add('hidden');
+
+            // Update progress indicators
+            progressBar.classList.add('pulse-animation');
+            progressStatus.textContent = 'Scraping in progress...';
+            statsContainer.classList.remove('hidden');
+
+            console.log("UI Updated: Scraper Running");
+        }
+
+        function setResumeAvailableUI() {
+            // Update button visibility
+            startBtn.classList.add('hidden');
+            resumeBtn.classList.remove('hidden');
+            stopBtn.classList.add('hidden');
+            resetBtn.disabled = false;
+            resetBtn.classList.remove('btn-disabled');
+            downloadBtn.classList.remove('hidden');
+
+            // Update progress indicators
+            progressBar.classList.remove('pulse-animation');
+            progressStatus.textContent = 'Ready to resume';
+            statsContainer.classList.remove('hidden');
+
+            console.log("UI Updated: Resume Available");
+        }
+
+        function setDataAvailableUI() {
+            // Update button visibility
+            startBtn.classList.remove('hidden');
+            resumeBtn.classList.add('hidden');
+            stopBtn.classList.add('hidden');
+            resetBtn.disabled = false;
+            resetBtn.classList.remove('btn-disabled');
+            downloadBtn.classList.remove('hidden');
+
+            // Update progress indicators
+            progressBar.classList.remove('pulse-animation');
+            progressStatus.textContent = 'Data available';
+
+            console.log("UI Updated: Data Available");
+        }
+
+        function setReadyToStartUI() {
+            // Update button visibility
+            startBtn.classList.remove('hidden');
+            resumeBtn.classList.add('hidden');
+            stopBtn.classList.add('hidden');
+            resetBtn.disabled = true;
+            resetBtn.classList.add('btn-disabled');
+            downloadBtn.classList.add('hidden');
+
+            // Update progress indicators
+            progressBar.style.width = '0%';
+            progressPercentage.textContent = '0%';
+            progressStatus.textContent = 'Ready to start';
+            progressBar.classList.remove('pulse-animation');
+            statsContainer.classList.add('hidden');
+
+            console.log("UI Updated: Ready to Start");
+        }
+
+        // Show status message
+        function showStatusMessage(message, type = 'info') {
+            statusContainer.classList.remove('hidden');
+            statusMessage.textContent = message;
+
+            // Clear previous classes
+            statusMessage.classList.remove('bg-green-100', 'text-green-800', 'bg-red-100', 'text-red-800', 'bg-blue-100', 'text-blue-800');
+
+            // Apply appropriate styling
+            if (type === 'success') {
+                statusMessage.classList.add('bg-green-100', 'text-green-800');
+            } else if (type === 'error') {
+                statusMessage.classList.add('bg-red-100', 'text-red-800');
+            } else {
+                statusMessage.classList.add('bg-blue-100', 'text-blue-800');
+            }
+
+            // Auto-hide after 5 seconds for non-error messages
+            if (type !== 'error') {
+                setTimeout(() => {
+                    statusContainer.classList.add('hidden');
+                }, 5000);
+            }
+        }
+
+        // Update statistics display
+        function updateStats(data = {}) {
+            if (data.stateInfo) {
+                currentStateInfo = data.stateInfo;
+                statsStates.textContent = `${data.stateInfo.index}/${data.stateInfo.total}`;
+                statsCurrentState.textContent = data.stateInfo.state || 'None';
+            }
+
+            if (data.eventsScraped !== undefined) {
+                eventsScraped = data.eventsScraped;
+                statsEvents.textContent = eventsScraped.toString();
+            }
+
+            // Show stats container
+            statsContainer.classList.remove('hidden');
+        }
+
+        // Initialize logs display
+        async function renderLogs(filter = 'all') {
+            try {
+                // Fetch logs from main process
+                const logs = await window.electronAPI.getLogs();
+
+                if (!logs || logs.length === 0) {
+                    logsContainer.innerHTML = '<div class="text-gray-500 italic text-center">No logs available</div>';
+                    return;
+                }
+
+                // Filter logs based on selection
+                const filteredLogs = filter === 'all'
+                    ? logs
+                    : logs.filter(log => log.type === filter);
+
+                // Render logs
+                logsContainer.innerHTML = filteredLogs.map((log) => `
+                    <div class="log-entry ${log.type}">
+                        <span class="timestamp">${log.timestamp}</span>
+                        ${log.message}
+                    </div>
+                `).join('');
+
+                // Scroll to bottom
+                logsContainer.scrollTop = logsContainer.scrollHeight;
+            } catch (error) {
+                console.error('Error fetching logs:', error);
+                logsContainer.innerHTML = `<div class="text-red-600">Error loading logs: ${error.message}</div>`;
+            }
+        }
+
+        // Auto-refresh logs setup
+        function setupAutoRefreshLogs() {
+            // Clear any existing interval
+            if (logsAutoRefreshInterval) {
+                clearInterval(logsAutoRefreshInterval);
+                logsAutoRefreshInterval = null;
+            }
+
+            // If checked, set up new interval
+            if (autoRefreshLogsCheckbox.checked) {
+                logsAutoRefreshInterval = setInterval(() => {
+                    if (logsModal.style.display === 'block') {
+                        renderLogs(logFilterSelect.value);
+                    } else {
+                        // Stop refreshing if modal is closed
+                        clearInterval(logsAutoRefreshInterval);
+                        logsAutoRefreshInterval = null;
+                        autoRefreshLogsCheckbox.checked = false;
+                    }
+                }, 2000); // Refresh every 2 seconds
+            }
+        }
+
+        // Show logs modal
+        viewLogsBtn.addEventListener('click', () => {
+            logsModal.style.display = 'block';
+            renderLogs(logFilterSelect.value);
+            setupAutoRefreshLogs();
+        });
+
+        // Close logs modal
+        closeLogsBtn.addEventListener('click', () => {
+            logsModal.style.display = 'none';
+            // Clear auto-refresh
+            if (logsAutoRefreshInterval) {
+                clearInterval(logsAutoRefreshInterval);
+                logsAutoRefreshInterval = null;
+            }
+        });
+
+        // Close modal when clicking outside
+        window.addEventListener('click', (event) => {
+            if (event.target === logsModal) {
+                logsModal.style.display = 'none';
+                // Clear auto-refresh
+                if (logsAutoRefreshInterval) {
+                    clearInterval(logsAutoRefreshInterval);
+                    logsAutoRefreshInterval = null;
+                }
+            }
+        });
+
+        // Refresh logs button
+        refreshLogsBtn.addEventListener('click', () => {
+            renderLogs(logFilterSelect.value);
+        });
+
+        // Clear log display
+        clearLogDisplayBtn.addEventListener('click', () => {
+            logsContainer.innerHTML = '<div class="text-gray-500 italic text-center">Log display cleared</div>';
+        });
+
+        // Log filter change
+        logFilterSelect.addEventListener('change', () => {
+            renderLogs(logFilterSelect.value);
+        });
+
+        // Auto-refresh checkbox
+        autoRefreshLogsCheckbox.addEventListener('change', setupAutoRefreshLogs);
+
+        // Start scraping
+        startBtn.addEventListener('click', async () => {
+            try {
+                // Update UI immediately
+                startBtn.classList.add('hidden');
+                stopBtn.classList.remove('hidden');
+                stopBtn.textContent = 'Stop Scraping'; // Reset the button text
+                stopBtn.disabled = false;
+                stopBtn.classList.remove('btn-disabled');
+                resetBtn.disabled = true;
+                resetBtn.classList.add('btn-disabled');
+                downloadBtn.classList.add('hidden');
+                progressBar.classList.add('pulse-animation');
+
+                // Reset progress indicators
+                progressBar.style.width = '0%';
+                progressPercentage.textContent = '0%';
+                progressDetail.textContent = '';
+                progressStatus.textContent = 'Starting scraper...';
+
+                // Update app state
+                isScraperRunning = true;
+
+                // Register progress listener
+                // In your index.html file, update the onScrapingProgress callback in both
+                // the start and resume event listeners:
+
+                window.electronAPI.onScrapingProgress((event, message, progressInfo = {}) => {
+                    console.log("Progress update:", message, progressInfo);
+
+                    // Make sure the UI is in the right state
+                    if (isScraperRunning) {
+                        setScraperRunningUI();
+                    }
+
+                    // Update progress bar if percentage provided
+                    if (progressInfo && progressInfo.percentage !== undefined) {
+                        const percentage = progressInfo.percentage;
+                        progressBar.style.width = `${percentage}%`;
+                        progressPercentage.textContent = `${percentage}%`;
+                    }
+
+                    // Update progress detail
+                    if (progressInfo && progressInfo.progressDetail) {
+                        progressDetail.textContent = progressInfo.progressDetail;
+                    }
+
+                    // Update status
+                    progressStatus.textContent = message;
+
+                    // Update stats if provided
+                    if (progressInfo && progressInfo.stats) {
+                        const stats = progressInfo.stats;
+
+                        // Update states count if available
+                        if (stats.statesProcessed !== undefined && stats.totalStates !== undefined) {
+                            statsStates.textContent = `${stats.statesProcessed}/${stats.totalStates}`;
+                        }
+
+                        // Update events count if available
+                        if (stats.eventsProcessed !== undefined) {
+                            statsEvents.textContent = stats.eventsProcessed.toString();
+                            // Store for future reference
+                            eventsScraped = stats.eventsProcessed;
+                        }
+
+                        // Update current state if available
+                        if (stats.currentStateName) {
+                            statsCurrentState.textContent = stats.currentStateName;
+                        }
+
+                        // Ensure stats container is visible
+                        statsContainer.classList.remove('hidden');
+                    }
+
+                    // If error, show status message
+                    if (progressInfo && progressInfo.error) {
+                        showStatusMessage(`Error: ${message}`, 'error');
+                    }
+                });
+
+                // Start scraping (with resume = false to ensure fresh start)
+                console.log("Starting scraper with fresh start");
+                const result = await window.electronAPI.startScraping({ resume: false });
+                console.log("Scraping result:", result);
+
+                if (result.success) {
+                    showStatusMessage('Scraping completed successfully', 'success');
+                    progressBar.style.width = '100%';
+                    progressPercentage.textContent = '100%';
+                    progressBar.classList.remove('pulse-animation');
+                    progressStatus.textContent = 'Scraping completed';
+                    // Update app state
+                    isScraperRunning = false;
+                    hasScrapedData = true;
+                } else {
+                    showStatusMessage(result.message, 'error');
+                    progressBar.classList.remove('pulse-animation');
+                    progressStatus.textContent = 'Scraping failed';
+                    // Update app state
+                    isScraperRunning = false;
+                }
+            } catch (error) {
+                showStatusMessage(`Unexpected error: ${error.message}`, 'error');
+                progressBar.classList.remove('pulse-animation');
+                progressStatus.textContent = 'Error occurred';
+                // Update app state
+                isScraperRunning = false;
             } finally {
-                startBtn.disabled = false;
-                resetBtn.disabled = false;
-                
+                console.log("Start scraping operation completed, refreshing app state");
                 // Remove progress listener
                 window.electronAPI.removeScrapingProgressListener();
+
+                // Re-fetch app state from backend
+                await initializeAppState();
+            }
+        });
+        // Resume scraping
+        resumeBtn.addEventListener('click', async () => {
+            try {
+                console.log("Resume button clicked");
+                // Update UI immediately
+                resumeBtn.classList.add('hidden');
+                stopBtn.classList.remove('hidden');
+                stopBtn.textContent = 'Stop Scraping'; // Reset the text to make sure it's correct
+                stopBtn.disabled = false;
+                stopBtn.classList.remove('btn-disabled');
+
+                resetBtn.disabled = true;
+                resetBtn.classList.add('btn-disabled');
+                downloadBtn.classList.add('hidden');
+                progressBar.classList.add('pulse-animation');
+
+                // Update progress indicators
+                progressBar.style.width = '0%';
+                progressPercentage.textContent = '0%';
+                progressDetail.textContent = '';
+                progressStatus.textContent = 'Resuming scraper...';
+
+                // Make sure stats container is visible when resuming
+                statsContainer.classList.remove('hidden');
+
+                // Update app state
+                isScraperRunning = true;
+
+                // Register progress listener with enhanced stats handling
+                window.electronAPI.onScrapingProgress((event, message, progressInfo = {}) => {
+                    console.log("Progress update (resume):", message, progressInfo);
+
+                    // Make sure the UI is in the right state
+                    if (isScraperRunning) {
+                        setScraperRunningUI();
+                        // Ensure stop button text is correct
+                        stopBtn.textContent = 'Stop Scraping';
+                    }
+
+                    // Update progress bar if percentage provided
+                    if (progressInfo && progressInfo.percentage !== undefined) {
+                        const percentage = progressInfo.percentage;
+                        progressBar.style.width = `${percentage}%`;
+                        progressPercentage.textContent = `${percentage}%`;
+                    }
+
+                    // Update progress detail
+                    if (progressInfo && progressInfo.progressDetail) {
+                        progressDetail.textContent = progressInfo.progressDetail;
+                    }
+
+                    // Update status
+                    progressStatus.textContent = message;
+
+                    // IMPORTANT: Handle stats updates
+                    if (progressInfo && progressInfo.stats) {
+                        const stats = progressInfo.stats;
+
+                        // Force-update the stats display with whatever data we have
+                        if (stats.statesProcessed !== undefined && stats.totalStates !== undefined) {
+                            console.log(`Updating states: ${stats.statesProcessed}/${stats.totalStates}`);
+                            statsStates.textContent = `${stats.statesProcessed}/${stats.totalStates}`;
+                        }
+
+                        if (stats.eventsProcessed !== undefined) {
+                            console.log(`Updating events: ${stats.eventsProcessed}`);
+                            statsEvents.textContent = stats.eventsProcessed.toString();
+                            eventsScraped = stats.eventsProcessed;
+                        }
+
+                        if (stats.currentStateName) {
+                            console.log(`Updating current state: ${stats.currentStateName}`);
+                            statsCurrentState.textContent = stats.currentStateName;
+                        }
+
+                        statsContainer.classList.remove('hidden');
+                    }
+
+                    // Handle any errors
+                    if (progressInfo && progressInfo.error) {
+                        showStatusMessage(`Error: ${message}`, 'error');
+                    }
+                });
+
+                // Resume scraping (explicitly set resume to true)
+                console.log("Starting scraper with resume = true");
+                const result = await window.electronAPI.startScraping({ resume: true });
+                console.log("Resume result:", result);
+
+                if (result.success) {
+                    showStatusMessage('Scraping resumed and completed successfully', 'success');
+                    progressBar.style.width = '100%';
+                    progressPercentage.textContent = '100%';
+                    progressBar.classList.remove('pulse-animation');
+                    progressStatus.textContent = 'Scraping completed';
+                    // Update app state
+                    isScraperRunning = false;
+                    hasScrapedData = true;
+                } else {
+                    showStatusMessage(result.message, 'error');
+                    progressBar.classList.remove('pulse-animation');
+                    progressStatus.textContent = 'Scraping failed';
+                    // Update app state
+                    isScraperRunning = false;
+                }
+            } catch (error) {
+                showStatusMessage(`Unexpected error: ${error.message}`, 'error');
+                progressBar.classList.remove('pulse-animation');
+                progressStatus.textContent = 'Error occurred';
+                // Update app state
+                isScraperRunning = false;
+            } finally {
+                console.log("Resume operation completed, refreshing app state");
+                // Remove progress listener
+                window.electronAPI.removeScrapingProgressListener();
+
+                // Re-fetch app state from backend
+                await initializeAppState();
+            }
+        });
+
+        // Stop scraping
+        stopBtn.addEventListener('click', async () => {
+            try {
+                console.log("Stop button clicked");
+                // Disable the button immediately to prevent multiple clicks
+                stopBtn.disabled = true;
+                stopBtn.classList.add('btn-disabled');
+
+                // Update UI immediately to show we're stopping
+                progressBar.classList.remove('pulse-animation');
+                progressStatus.textContent = 'Stopping scraper...';
+                stopBtn.textContent = 'Stopping...'; // Visual feedback
+
+                showStatusMessage('Stopping scraper, please wait...', 'info');
+
+                console.log("Requesting backend to stop scraping");
+                const result = await window.electronAPI.stopScraping();
+                console.log("Stop result:", result);
+
+                if (result.success) {
+                    // Update UI to show stopped state
+                    progressBar.classList.remove('pulse-animation');
+                    progressStatus.textContent = 'Scraping stopped';
+                    stopBtn.classList.add('hidden');
+
+                    // Show appropriate buttons based on data status
+                    if (hasScrapedData) {
+                        // Data was collected - allow reset and download
+                        resetBtn.disabled = false;
+                        resetBtn.classList.remove('btn-disabled');
+                        downloadBtn.classList.remove('hidden');
+
+                        // Check if we have progress data
+                        const state = await window.electronAPI.checkAppState();
+                        if (state.hasProgress) {
+                            resumeBtn.classList.remove('hidden');
+                        } else {
+                            startBtn.classList.remove('hidden');
+                        }
+                    } else {
+                        // No data was collected - back to start state
+                        startBtn.classList.remove('hidden');
+                    }
+
+                    showStatusMessage('Scraping stopped successfully', 'success');
+
+                    // Update app state
+                    isScraperRunning = false;
+                } else {
+                    showStatusMessage(result.message, 'error');
+                    // Re-enable stop button as stopping failed
+                    stopBtn.disabled = false;
+                    stopBtn.classList.remove('btn-disabled');
+                    stopBtn.textContent = 'Stop Scraping'; // Reset text
+                }
+            } catch (error) {
+                showStatusMessage(`Unexpected error: ${error.message}`, 'error');
+                stopBtn.disabled = false;
+                stopBtn.classList.remove('btn-disabled');
+                stopBtn.textContent = 'Stop Scraping'; // Reset text
+            } finally {
+                console.log("Stop operation completed, refreshing app state");
+                // Re-fetch app state from backend after a short delay to ensure backend has completed its operations
+                setTimeout(async () => {
+                    await initializeAppState();
+                }, 1000);
             }
         });
 
         // Reset scraper
         resetBtn.addEventListener('click', async () => {
-            startBtn.disabled = true;
-            resetBtn.disabled = true;
-            
             try {
+                console.log("Reset button clicked");
+                // Confirm reset
+                if (!confirm('Are you sure you want to reset the scraper? This will delete all scraped data and progress.')) {
+                    return;
+                }
+
+                // Disable the button immediately to prevent multiple clicks
+                resetBtn.disabled = true;
+                resetBtn.classList.add('btn-disabled');
+
+                console.log("Requesting backend to reset scraper");
                 const result = await window.electronAPI.resetScraper();
+                console.log("Reset result:", result);
 
                 if (result.success) {
-                    logMessage(result.message, 'success');
-                    progressLog.innerHTML = ''; // Clear logs
+                    showStatusMessage('Scraper reset successfully', 'success');
+                    progressBar.style.width = '0%';
+                    progressPercentage.textContent = '0%';
+                    progressDetail.textContent = '';
+                    progressStatus.textContent = 'Ready to start';
+
+                    // Reset the stats display
+                    statsStates.textContent = '0/0';
+                    statsEvents.textContent = '0';
+                    statsCurrentState.textContent = 'None';
+                    statsContainer.classList.add('hidden');
+
+                    // Update app state
+                    hasScrapedData = false;
+                    hasProgress = false;
+                    eventsScraped = 0;
+
+                    // Force ready to start UI
+                    setReadyToStartUI();
                 } else {
-                    logMessage(result.message, 'error');
+                    showStatusMessage(result.message, 'error');
                 }
             } catch (error) {
-                logMessage(`Unexpected error: ${error.message}`, 'error');
+                showStatusMessage(`Unexpected error: ${error.message}`, 'error');
             } finally {
-                startBtn.disabled = false;
-                resetBtn.disabled = false;
+                console.log("Reset operation completed, refreshing app state");
+                // Re-fetch app state from backend
+                await initializeAppState();
             }
         });
+
+        // Download CSV
+        downloadBtn.addEventListener('click', async () => {
+            try {
+                console.log("Download button clicked");
+                // Disable the button immediately to prevent multiple clicks
+                downloadBtn.disabled = true;
+                downloadBtn.classList.add('btn-disabled');
+
+                console.log("Requesting to save CSV file");
+                const result = await window.electronAPI.saveCSVFile();
+                console.log("Save result:", result);
+
+                if (result.success) {
+                    showStatusMessage(`CSV saved to ${result.path}`, 'success');
+                } else {
+                    showStatusMessage(result.message, 'error');
+                }
+            } catch (error) {
+                showStatusMessage(`Unexpected error: ${error.message}`, 'error');
+            } finally {
+                // Re-enable button
+                downloadBtn.disabled = false;
+                downloadBtn.classList.remove('btn-disabled');
+            }
+        });
+
+        // Debug function to log current state
+        function logStateToConsole() {
+            console.log("Current App State:", {
+                isScraperRunning,
+                hasScrapedData,
+                hasProgress,
+                startBtnHidden: startBtn.classList.contains('hidden'),
+                resumeBtnHidden: resumeBtn.classList.contains('hidden'),
+                stopBtnHidden: stopBtn.classList.contains('hidden'),
+                resetBtnDisabled: resetBtn.disabled,
+                downloadBtnHidden: downloadBtn.classList.contains('hidden')
+            });
+        }
+
+        // Initialize app state on load
+        document.addEventListener('DOMContentLoaded', async () => {
+            console.log("DOM Content Loaded, initializing app");
+            await initializeAppState();
+            logStateToConsole();
+        });
+
+        // Set up periodic state check to ensure UI stays in sync
+        // This is important in case the backend state changes without UI being updated
+        setInterval(async () => {
+            try {
+                const state = await window.electronAPI.checkAppState();
+
+                // Only refresh UI if there's a state mismatch
+                if (state.isScraperRunning !== isScraperRunning ||
+                    state.scrapedDataExists !== hasScrapedData ||
+                    state.hasProgress !== hasProgress) {
+
+                    console.log("State mismatch detected, refreshing app state");
+                    console.log("Backend:", state);
+                    console.log("Frontend:", { isScraperRunning, hasScrapedData, hasProgress });
+
+                    await initializeAppState();
+                }
+            } catch (error) {
+                console.error("Error in periodic state check:", error);
+            }
+        }, 5000); // Check every 5 seconds
     </script>
 </body>
+
 </html>
