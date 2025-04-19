@@ -1,0 +1,91 @@
+Car Events Scraper - User Instructions
+====================================
+
+Overview
+--------
+This application scrapes car events data from carcruisefinder.com and saves it in a CSV format. The interface provides various controls to manage the scraping process and view results.
+
+Button Controls
+-------------
+1. Start Scraping
+   - Begins a new scraping session from scratch
+   - Will clear any previous progress
+   - Shows up when no scraping is in progress
+
+2. Resume Scraping
+   - Continues scraping from where it last stopped
+   - Only appears if there's previous unfinished scraping data
+   - Useful if scraping was interrupted
+
+3. Stop Scraping
+   - Halts the current scraping process
+   - Saves progress for later resuming
+   - Only visible while scraping is active
+
+4. Reset Scraper
+   - Clears all scraped data and progress
+   - Removes saved files
+   - Cannot be used while scraping is active
+   - Requires confirmation
+
+5. Download CSV
+   - Saves scraped data to a CSV file
+   - Only available when data has been collected
+   - Lets you choose save location
+
+6. View Logs
+   - Opens a window showing scraping activity logs
+   - Includes success, info, and error messages
+   - Features:
+     * Auto-refresh toggle
+     * Log filtering (All/Info/Success/Error)
+     * Manual refresh
+     * Clear display
+
+Progress Indicators
+-----------------
+- Progress Bar: Shows overall scraping progress
+- States Processed: Shows current state/total states
+- Events Scraped: Total number of events collected
+- Current State: Shows which state is being processed
+
+Status Messages
+-------------
+- Appears at the top of the interface
+- Shows important notifications
+- Error messages stay visible
+- Success messages auto-hide after 5 seconds
+
+Usage Flow
+---------
+1. Initial Start:
+   - Click "Start Scraping"
+   - Monitor progress through indicators
+   - View logs for detailed activity
+
+2. Interrupting:
+   - Click "Stop Scraping" to pause
+   - Progress is automatically saved
+   - "Resume Scraping" will appear
+
+3. Completing:
+   - Wait for progress to reach 100%
+   - Use "Download CSV" to save data
+   - Reset if you want to start fresh
+
+Tips
+----
+- Keep the application window open while scraping
+- Use "View Logs" to monitor detailed progress
+- If scraping seems stuck, check logs for errors
+- Always use "Stop Scraping" instead of closing the window
+- Back up downloaded CSV files before resetting
+
+Error Handling
+-------------
+- If errors occur, check the logs for details
+- Try stopping and resuming if scraping stalls
+- Use reset only as a last resort
+- If persistent errors occur, try restarting the application
+
+Note: The scraper respects website limitations and includes delays between requests to prevent overloading the server.

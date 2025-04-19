@@ -22,6 +22,13 @@ class ComprehensiveCarEventScraper {
     this.totalStates = 0;
     this.processedEvents = 0;
     this.totalEventsFound = 0;
+    
+    // Enhanced progress tracking
+    this.stateProgress = options.stateProgress || {}; // Track pages scraped per state
+    this.completedStates = options.completedStates || new Set(); // Track fully completed states
+    
+    // Control flag for stopping scraper
+    this.isRunning = true;
 
     // Default progress callback
     this.onProgress = (message, progressData) => {
@@ -48,6 +55,8 @@ class ComprehensiveCarEventScraper {
         totalStates: this.totalStates,
         processedEvents: this.processedEvents,
         totalEventsFound: this.totalEventsFound,
+        stateProgress: this.stateProgress,
+        completedStates: Array.from(this.completedStates),
         timestamp: new Date().toISOString()
       };
 
@@ -97,6 +106,14 @@ class ComprehensiveCarEventScraper {
       if (Array.isArray(progressData.trackedEventLinks)) {
         this.trackedEventLinks = new Set(progressData.trackedEventLinks);
       }
+      
+      // Restore enhanced progress tracking
+      this.stateProgress = progressData.stateProgress || {};
+      
+      // Restore completed states
+      if (Array.isArray(progressData.completedStates)) {
+        this.completedStates = new Set(progressData.completedStates);
+      }
 
       return true;
     } catch (error) {
@@ -118,7 +135,8 @@ class ComprehensiveCarEventScraper {
         { id: 'stateAbbr', title: 'State Abbr' },
         { id: 'country', title: 'Country' },
         { id: 'date', title: 'Date' },
-        { id: 'time', title: 'Time' },
+        { id: 'start-time', title: 'Start Time' },
+        { id: 'end-time', title: 'End Time' },
         { id: 'description', title: 'Description' },
         { id: 'originalLink', title: 'Original Link' }
       ],
@@ -126,18 +144,77 @@ class ComprehensiveCarEventScraper {
     });
   }
 
+  // Method to stop the scraper
+  stop() {
+    this.isRunning = false;
+    this.onProgress('Scraper stop requested. Will stop after current task completes.', {
+      stopped: true,
+      message: 'Stop requested by user'
+    });
+  }
+
   // Scrape a single state worker with retries
   async scrapeStateWorker(stateLink, stateName) {
+    // Check if scraper has been stopped
+    if (!this.isRunning) {
+      this.onProgress(`Scraping of state ${stateName} aborted due to stop request`, {
+        stateAborted: {
+          state: stateName
+        }
+      });
+      return [];
+    }
+    
+    // Create a state identifier that's unique and safe for storing in JSON
+    const stateId = stateName.toLowerCase().replace(/\s+/g, '_');
+    
+    // Handle if the URL has changed but we're trying to scrape the same state
+    // This maps the old URL format to the new one if needed
     const fullUrl = stateLink.startsWith('http')
       ? stateLink
       : `${this.baseUrl}${stateLink}`;
-
+      
+    // Check if we've already completed this state
+    if (this.completedStates.has(stateId)) {
+      this.onProgress(`State ${stateName} already fully scraped. Skipping.`, {
+        stateSkipped: {
+          state: stateName,
+          reason: 'already_completed'
+        }
+      });
+      return [];
+    }
+    
+    // Get the last processed page for this state, or start from 1
     let currentPage = 1;
+    if (this.stateProgress[stateId] && this.stateProgress[stateId].lastPage) {
+      currentPage = this.stateProgress[stateId].lastPage + 1;
+      this.onProgress(`Resuming state ${stateName} from page ${currentPage}`, {
+        stateResumed: {
+          state: stateName,
+          page: currentPage
+        }
+      });
+    }
+    
     let hasMorePages = true;
     const scrapedEventLinks = [];
     const maxRetries = 3;
 
+    // For easier identification in logs
+    const stateDisplayName = stateName || this.getStateFromUrl(stateLink) || 'Unknown State';
+
     while (hasMorePages) {
+      // Check if scraper has been stopped
+      if (!this.isRunning) {
+        this.onProgress(`Scraping of state ${stateDisplayName} aborted due to stop request`, {
+          stateAborted: {
+            state: stateDisplayName
+          }
+        });
+        return scrapedEventLinks;
+      }
+      
       let retries = 0;
       let success = false;
 
@@ -148,9 +225,9 @@ class ComprehensiveCarEventScraper {
             ? `${fullUrl}/page/${currentPage}/`
             : fullUrl;
 
-          this.onProgress(`Scraping page ${currentPage} for ${stateName}`, {
+          this.onProgress(`Scraping page ${currentPage} for ${stateDisplayName}`, {
             stateProgress: {
-              state: stateName,
+              state: stateDisplayName,
               currentPage,
               eventsFound: scrapedEventLinks.length
             }
@@ -160,9 +237,9 @@ class ComprehensiveCarEventScraper {
           if (retries > 0) {
             const delay = Math.pow(2, retries) * 1000;
             await new Promise(resolve => setTimeout(resolve, delay));
-            this.onProgress(`Retry ${retries}/${maxRetries} for page ${currentPage} of ${stateName}`, {
+            this.onProgress(`Retry ${retries}/${maxRetries} for page ${currentPage} of ${stateDisplayName}`, {
               stateProgress: {
-                state: stateName,
+                state: stateDisplayName,
                 currentPage,
                 eventsFound: scrapedEventLinks.length,
                 retrying: true,
@@ -176,12 +253,12 @@ class ComprehensiveCarEventScraper {
             headers: {
               'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
             },
-            timeout: 20000 // 20 seconds timeout
+            timeout: 60000  // 60 seconds timeout
           });
 
           const $ = cheerio.load(response.data);
 
-          const eventLinks = $('h2.tribe-events-list-event-title.entry-title.summary a.url')
+          const eventLinks = $('h3.tribe-events-calendar-list__event-title a.tribe-events-calendar-list__event-title-link')
             .map((i, el) => $(el).attr('href'))
             .get()
             .filter(link => !this.trackedEventLinks.has(link));
@@ -200,8 +277,18 @@ class ComprehensiveCarEventScraper {
           }
 
           for (const chunk of chunks) {
+            // Check if scraper has been stopped
+            if (!this.isRunning) {
+              this.onProgress(`Scraping of events for ${stateDisplayName} aborted due to stop request`, {
+                eventsAborted: {
+                  state: stateDisplayName
+                }
+              });
+              return scrapedEventLinks;
+            }
+            
             const eventScrapingPromises = chunk.map(async (eventLink) => {
-              return await this.scrapeEventDetails(eventLink, stateName);
+              return await this.scrapeEventDetails(eventLink, stateDisplayName);
             });
 
             // Wait for chunk to complete
@@ -212,7 +299,7 @@ class ComprehensiveCarEventScraper {
             this.processedEvents += successfulScrapes;
 
             // Update progress
-            this.onProgress(`Processed ${this.processedEvents}/${this.totalEventsFound} events (${stateName})`, {
+            this.onProgress(`Processed ${this.processedEvents}/${this.totalEventsFound} events (${stateDisplayName})`, {
               overallProgress: {
                 processed: this.processedEvents,
                 total: this.totalEventsFound,
@@ -229,6 +316,18 @@ class ComprehensiveCarEventScraper {
           scrapedEventLinks.push(...eventLinks);
           this.totalEventsFound += eventLinks.length;
 
+          // Update the state progress with the last successfully processed page
+          this.stateProgress[stateId] = {
+            ...this.stateProgress[stateId],
+            lastPage: currentPage,
+            totalPages: currentPage, // We continuously update this as we progress
+            lastProcessed: new Date().toISOString(),
+            eventsFound: (this.stateProgress[stateId]?.eventsFound || 0) + eventLinks.length
+          };
+          
+          // Save progress after each successful page
+          await this.saveProgress();
+
           // Increment page
           currentPage++;
           success = true;
@@ -238,11 +337,11 @@ class ComprehensiveCarEventScraper {
 
         } catch (error) {
           retries++;
-          this.onProgress(`Error scraping page ${currentPage} for ${stateName}: ${error.message}. Retry ${retries}/${maxRetries}`, {
+          this.onProgress(`Error scraping page ${currentPage} for ${stateDisplayName}: ${error.message}. Retry ${retries}/${maxRetries}`, {
             error: true,
             errorDetails: {
               message: error.message,
-              state: stateName,
+              state: stateDisplayName,
               page: currentPage,
               retryCount: retries
             }
@@ -267,7 +366,73 @@ class ComprehensiveCarEventScraper {
       }
     }
 
+    // Mark this state as completed
+    this.completedStates.add(stateId);
+    this.onProgress(`State ${stateDisplayName} fully scraped and marked as completed`, {
+      stateCompleted: {
+        state: stateDisplayName,
+        pagesProcessed: currentPage - 1,
+        eventsFound: scrapedEventLinks.length,
+        markedComplete: true
+      }
+    });
+    
+    // Save progress after state completion
+    await this.saveProgress();
+
     return scrapedEventLinks;
+  }
+
+  // Helper method to extract state name from URL
+  getStateFromUrl(url) {
+    try {
+      if (!url) return 'Unknown State';
+
+      // For absolute URLs, convert to URL object and work with the path
+      let urlPath = url;
+      
+      if (url.startsWith('http')) {
+        try {
+          const urlObj = new URL(url);
+          urlPath = urlObj.pathname;
+        } catch (e) {
+          console.error('Invalid URL:', url);
+        }
+      }
+      
+      // Handle new URL format: /car-shows/category/iowa/
+      const newFormatRegex = /\/car-shows\/category\/([a-z-]+)\/?/i;
+      const newFormatMatch = urlPath.match(newFormatRegex);
+      
+      if (newFormatMatch && newFormatMatch[1]) {
+        const stateName = newFormatMatch[1].toLowerCase();
+        return stateName.charAt(0).toUpperCase() + stateName.slice(1);
+      }
+      
+      // Handle old URL format: /alabama-car-events/events/category/alabama-car-shows/
+      const oldFormatRegex = /\/([a-z-]+)-car-events\//i;
+      const oldFormatMatch = urlPath.match(oldFormatRegex);
+      
+      if (oldFormatMatch && oldFormatMatch[1]) {
+        const stateName = oldFormatMatch[1].split('-')[0].toLowerCase();
+        return stateName.charAt(0).toUpperCase() + stateName.slice(1);
+      }
+      
+      // If all else fails, try to extract state name from any part of the URL
+      const anyStateRegex = /\/([a-z-]+)(?:\/|$)/i;
+      const pathParts = urlPath.split('/').filter(p => p && !['events', 'category', 'car-shows'].includes(p.toLowerCase()));
+      
+      if (pathParts.length > 0) {
+        const possibleState = pathParts[0].split('-')[0].toLowerCase();
+        return possibleState.charAt(0).toUpperCase() + possibleState.slice(1);
+      }
+      
+      console.warn('Could not extract state name from URL:', url);
+      return 'Unknown State';
+    } catch (error) {
+      console.error('Error extracting state from URL:', error, url);
+      return 'Unknown State';
+    }
   }
 
   // Scrape details for a single event with retries
@@ -298,41 +463,93 @@ class ComprehensiveCarEventScraper {
         const $ = cheerio.load(response.data);
 
         // Extract event name
-        const eventName = $('h1.entry-title').text().trim();
+        const eventName = $('span.evnt_title h1.tribe-events-single-event-title').text().trim();
 
         // Extract venue and location from meta_data
-        const venueElement = $('.meta_data .date_value .tribe-events-venue-details-on-single');
-        const venue = venueElement.find('.tribe-get_venue').text().trim();
+        const venue = $('dd.tribe-venue').text().trim();
 
-        const addressElement = venueElement.find('.tribe-events-address .tribe-address');
+        // Extract address components
+        const addressElement = $('dd.tribe-venue-location address.tribe-events-address span.tribe-address');
         const streetAddress = addressElement.find('.tribe-street-address').text().trim();
         const city = addressElement.find('.tribe-locality').text().trim();
         const stateAbbr = addressElement.find('.tribe-region').attr('title') ||
           addressElement.find('.tribe-region').text().trim();
         const country = addressElement.find('.tribe-country-name').text().trim();
 
-        // Extract date specifically from the div with calendar icon
-        const dateElement = $('.meta_data .title_with_icoone i.fa-calendar')
-          .closest('.main_meta_data')
-          .find('.date_value .tribe-events-abbr');
-        const date = dateElement.attr('title');
+        // Extract date
+        const dateElement = $('abbr.tribe-events-abbr.tribe-events-start-date');
+        const date = dateElement.attr('title') || dateElement.text().trim();
 
         // Extract time
-        const timeElement = $('.meta_data .title_with_icoone i.fa-clock')
-          .closest('.main_meta_data')
-          .find('.time_value .tribe-events-abbr');
-        const time = timeElement.text().trim();
+        // Check if we have a time range with the recursive event time class
+        const timeRangeElement = $('div.tribe-events-abbr.tribe-events-start-time .tribe-recurring-event-time');
+        // Check for single time format
+        const singleTimeElement = $('div.tribe-events-abbr.tribe-events-start-time.published.dtstart');
 
-        // Extract full description
-        const description = $('.content_description.fulldescriptio')
-          .clone()
-          .find('a.seeless')
-          .remove()
-          .end()
-          .text()
-          .replace(/\n+/g, ' ')
-          .replace(/\s+/g, ' ')
-          .trim();
+        // Variables for storing processed time
+        let startTime = '';
+        let endTime = '';
+
+        // Check for time range first
+        if (timeRangeElement && timeRangeElement.length > 0) {
+          const timeText = timeRangeElement.text().trim();
+          // Split by hyphen to get start and end times
+          const splitTime = timeText.split('-');
+          if (splitTime.length >= 2) {
+            startTime = splitTime[0].trim();
+            endTime = splitTime[1].trim();
+          } else {
+            // If somehow there's no hyphen but we're in this element
+            startTime = timeText;
+          }
+        }
+        // Check for single time format
+        else if (singleTimeElement && singleTimeElement.length > 0) {
+          startTime = singleTimeElement.text().trim();
+          endTime = ''; // No end time
+        }
+
+        // Extract description - find content between "action-buttons" and "custom-event-message" divs
+        let description = '';
+
+        // Try to find the starting and ending elements
+        const actionButtonsDiv = $('.action-buttons');
+        const customEventMessageDiv = $('.custom-event-message');
+
+        if (actionButtonsDiv.length > 0) {
+          // Start gathering content after the action-buttons div
+          let currentElement = actionButtonsDiv[0].nextSibling;
+          const descriptionParts = [];
+
+          // Continue until we reach the custom-event-message div or run out of elements
+          while (currentElement &&
+            !($(currentElement).hasClass && $(currentElement).hasClass('custom-event-message'))) {
+
+            // If this is an element node, get its text content
+            if (currentElement.type === 'tag') {
+              const text = $(currentElement).text().trim();
+              if (text) {
+                descriptionParts.push(text);
+              }
+            }
+            // If this is a text node, add its content
+            else if (currentElement.type === 'text') {
+              const text = $(currentElement).text().trim();
+              if (text) {
+                descriptionParts.push(text);
+              }
+            }
+
+            // Move to the next sibling
+            currentElement = currentElement.nextSibling;
+          }
+
+          // Combine all description parts and clean up
+          description = descriptionParts.join(' ')
+            .replace(/\n+/g, ' ')  // Replace newlines with spaces
+            .replace(/\s+/g, ' ')  // Normalize spaces
+            .trim();
+        }
 
         // Prepare record
         const record = {
@@ -344,7 +561,8 @@ class ComprehensiveCarEventScraper {
           stateAbbr,
           country,
           date,
-          time,
+          'start-time': startTime,
+          'end-time': endTime,
           description,
           originalLink: eventLink
         };
@@ -365,7 +583,6 @@ class ComprehensiveCarEventScraper {
         });
 
         return record;
-
       } catch (error) {
         retries++;
         this.onProgress(`Error scraping event ${eventLink}: ${error.message}. Retry ${retries}/${maxRetries}`, {
@@ -390,21 +607,39 @@ class ComprehensiveCarEventScraper {
   // Main scraping method with multi-threading
   async scrapeAllEvents(stateLinks, resumeFromState = 0) {
     try {
+      // Set running state
+      this.isRunning = true;
+      
       // Ensure CSV header exists
       await this.initCsvWriter();
 
       // Try to load progress if resuming
-      if (resumeFromState > 0) {
+      if (resumeFromState > 0 || resumeFromState === true) {
         await this.loadProgress();
+        // If resumeFromState === true, use the stored currentState
+        if (resumeFromState === true) {
+          resumeFromState = this.currentState;
+        }
       }
 
       // Total states for progress tracking
       this.totalStates = stateLinks.length;
       this.currentState = resumeFromState;
 
+      // Log progress summary before starting
+      const completedCount = this.completedStates.size;
+      this.onProgress(`Starting scraper with ${completedCount} states already completed, processing ${stateLinks.length - completedCount} remaining states`, {
+        scraperSummary: {
+          totalStates: stateLinks.length,
+          completedStates: completedCount,
+          remainingStates: stateLinks.length - completedCount,
+          eventsAlreadyFound: this.totalEventsFound
+        }
+      });
+
       for (let i = resumeFromState; i < stateLinks.length; i++) {
-        // Check if scraping was stopped (from global variable)
-        if (global.isScraperRunning === false) {
+        // Check if scraping was stopped
+        if (!this.isRunning || global.isScraperRunning === false) {
           this.onProgress('Scraping stopped by user request', {
             stopped: true,
             atState: i,
@@ -418,9 +653,25 @@ class ComprehensiveCarEventScraper {
 
         this.currentState = i;
         const { link, name } = stateLinks[i];
+        
+        // Make sure we have a valid state name, even if the link format changed
+        const stateName = name || this.getStateFromUrl(link) || `State ${i+1}`;
+        const stateId = stateName.toLowerCase().replace(/\s+/g, '_');
+        
+        // Skip if state is already fully processed
+        if (this.completedStates.has(stateId)) {
+          this.onProgress(`Skipping completed state: ${stateName}`, {
+            stateSkipped: {
+              state: stateName,
+              stateIndex: i,
+              totalStates: stateLinks.length
+            }
+          });
+          continue;
+        }
 
         try {
-          this.onProgress(`Starting scraping for state: ${name} (${i + 1}/${stateLinks.length})`, {
+          this.onProgress(`Starting scraping for state: ${stateName} (${i + 1}/${stateLinks.length})`, {
             overallProgress: {
               statesProcessed: i,
               totalStates: stateLinks.length,
@@ -430,11 +681,11 @@ class ComprehensiveCarEventScraper {
           });
 
           // Scrape event links and details for this state
-          const scrapedEventLinks = await this.scrapeStateWorker(link, name);
+          const scrapedEventLinks = await this.scrapeStateWorker(link, stateName);
 
-          this.onProgress(`Completed scraping for state: ${name}. Scraped ${scrapedEventLinks.length} events.`, {
+          this.onProgress(`Completed scraping for state: ${stateName}. Scraped ${scrapedEventLinks.length} events.`, {
             stateCompleted: {
-              state: name,
+              state: stateName,
               eventsScraped: scrapedEventLinks.length,
               stateIndex: i,
               totalStates: stateLinks.length
@@ -445,19 +696,30 @@ class ComprehensiveCarEventScraper {
           await this.saveProgress();
 
         } catch (error) {
-          this.onProgress(`Error processing state ${name}: ${error.message}`, {
+          this.onProgress(`Error processing state ${stateName}: ${error.message}`, {
             error: true,
             errorDetails: {
               message: error.message,
-              state: name,
+              state: stateName,
               stateIndex: i
             }
           });
         }
       }
+      
+      this.onProgress(`Scraping completed for all states. Total events found: ${this.totalEventsFound}`, {
+        scrapingComplete: {
+          totalEvents: this.totalEventsFound,
+          totalStates: stateLinks.length
+        }
+      });
+      
     } catch (error) {
       console.error('Error in scrapeAllEvents:', error);
       throw error;
+    } finally {
+      // Make sure to save progress even if there was an error
+      await this.saveProgress();
     }
   }
 }

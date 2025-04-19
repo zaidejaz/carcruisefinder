@@ -249,24 +249,45 @@ function setupIpcHandlers() {
 
       // Transform state links to include names
       const stateLinks = stateLinksData.stateCarShowLinks.map(link => {
-        // Extract state name from URL segment
-        let stateName;
+        // Use the state name extraction logic from the scraper
+        let stateName = 'Unknown State';
+        
         try {
-          stateName = link
-            .split('/')[1]
-            .replace('-car-events', '')
-            .replace('-car-shows', '')
-            .split('-')
-            .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-            .join(' ');
+          // For new URL format: /car-shows/category/iowa/
+          if (link.includes('/car-shows/category/')) {
+            const match = link.match(/\/car-shows\/category\/([a-z-]+)\/?/i);
+            if (match && match[1]) {
+              const state = match[1].toLowerCase();
+              stateName = state.charAt(0).toUpperCase() + state.slice(1);
+            }
+          } 
+          // For old URL format: /alabama-car-events/
+          else if (link.includes('-car-events/')) {
+            const match = link.match(/\/([a-z-]+)-car-events\//i);
+            if (match && match[1]) {
+              const state = match[1].split('-')[0].toLowerCase();
+              stateName = state.charAt(0).toUpperCase() + state.slice(1);
+            }
+          }
+          // Fall back to basic URL parsing if needed
+          else {
+            const urlPath = link.startsWith('http') 
+              ? new URL(link).pathname
+              : link;
+              
+            const pathParts = urlPath.split('/').filter(p => p && !['events', 'category', 'car-shows'].includes(p));
+            if (pathParts.length > 0) {
+              const state = pathParts[0].split('-')[0].toLowerCase();
+              stateName = state.charAt(0).toUpperCase() + state.slice(1);
+            }
+          }
         } catch (e) {
-          // Fallback if URL parsing fails
-          stateName = link.replace(/https?:\/\/[^/]+\//, '')
-            .replace(/\/.*/, '')
-            .replace(/-/g, ' ');
+          console.error(`Error extracting state name from URL: ${link}`, e);
+          // Use a fallback
+          stateName = link.split('/').filter(Boolean)[0] || 'Unknown State';
         }
 
-        return { link, name: stateName || 'Unknown State' };
+        return { link, name: stateName };
       });
 
       if (stateLinks.length === 0) {
@@ -388,15 +409,26 @@ function setupIpcHandlers() {
         stopped: true
       });
 
-      // Force scraper to clean up if it exists
+      // Stop scraper with new stopping mechanism if available
       if (scraperInstance) {
+        // Use the stop method if available
+        if (typeof scraperInstance.stop === 'function') {
+          scraperInstance.stop();
+        }
+        
         // Add a message to the scraper's log
         if (typeof scraperInstance.writeLog === 'function') {
           await scraperInstance.writeLog('Scraper forcibly stopped by user');
         }
 
-        // Clear the instance to allow garbage collection
-        scraperInstance = null;
+        // Allow some time for the scraper to clean up
+        setTimeout(async () => {
+          if (scraperInstance && typeof scraperInstance.cleanup === 'function') {
+            await scraperInstance.cleanup();
+          }
+          // Clear the instance to allow garbage collection
+          scraperInstance = null;
+        }, 2000);
       }
 
       return {

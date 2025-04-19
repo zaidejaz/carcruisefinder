@@ -566,9 +566,16 @@
                             eventsScraped = stats.eventsProcessed;
                         }
 
-                        // Update current state if available
+                        // Update current state if available 
                         if (stats.currentStateName) {
                             statsCurrentState.textContent = stats.currentStateName;
+                            
+                            // Also update the title to include state information
+                            if (stats.statesProcessed !== undefined && stats.totalStates !== undefined) {
+                                document.title = `CarCruiseFinder - ${stats.currentStateName} (${stats.statesProcessed}/${stats.totalStates})`;
+                            }
+                        } else {
+                            statsCurrentState.textContent = 'Unknown State';
                         }
 
                         // Ensure stats container is visible
